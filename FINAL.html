@@ -1,0 +1,2069 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analisa Curah Hujan Menggunakan MATLAB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <style>
+      /* --- 1. THE SETUP & HORIZONTAL SLIDER (ANTI-BLANK SYSTEM) --- */
+      * {
+        box-sizing: border-box;
+      }
+      p {
+        margin: 0;
+        margin-bottom: 15px;
+      }
+
+      html,
+      body {
+        background-color: #0f172a;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* Mencegah scroll default */
+      }
+
+      /* Jendela Utama Presentasi */
+      .presentation-window {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Kontainer Utama Slider (Memanjang ke kanan) */
+      .deck-container {
+        display: flex;
+        height: 100%;
+        transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+        z-index: 10;
+      }
+
+      /* Slide Wrapper - Fixed flex issue */
+      .slide-wrapper {
+        flex: 0 0 100vw; /* Memaksa slide memakan tepat 1 viewport width */
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Base Slide Container: Fixed 1280x720 with Auto-Scale */
+      .slide-container {
+        align-items: center;
+        border-radius: 40px;
+        box-shadow:
+          0 30px 60px rgba(0, 0, 0, 0.9),
+          inset 0 0 0 6px rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        font-family: "Nunito", sans-serif;
+        width: 1280px;
+        height: 720px;
+        justify-content: center;
+        padding: 60px 80px;
+        position: relative;
+        margin: 0;
+        transform-origin: center center;
+      }
+
+      /* --- BACKGROUND VARIATIONS --- */
+      .bg-var-1 {
+        background: linear-gradient(
+          180deg,
+          #475569 0%,
+          #64748b 40%,
+          #94a3b8 100%
+        );
+      }
+      .bg-var-2 {
+        background: linear-gradient(
+          180deg,
+          #334155 0%,
+          #475569 50%,
+          #64748b 100%
+        );
+      }
+      .bg-var-3 {
+        background: linear-gradient(
+          135deg,
+          #1e293b 0%,
+          #334155 60%,
+          #475569 100%
+        );
+      }
+      .bg-var-4 {
+        background: linear-gradient(
+          180deg,
+          #111827 0%,
+          #1e293b 40%,
+          #334155 100%
+        );
+      }
+      .bg-var-5 {
+        background: linear-gradient(
+          220deg,
+          #0f172a 0%,
+          #1e293b 50%,
+          #334155 100%
+        );
+      }
+      .bg-var-6 {
+        background: linear-gradient(
+          180deg,
+          #374151 0%,
+          #4b5563 50%,
+          #6b7280 100%
+        );
+      }
+      .bg-var-7 {
+        background: linear-gradient(
+          135deg,
+          #1e3a8a 0%,
+          #1e40af 50%,
+          #3b82f6 100%
+        );
+      }
+      .bg-var-8 {
+        background: linear-gradient(
+          180deg,
+          #020617 0%,
+          #0f172a 40%,
+          #1e293b 100%
+        );
+      }
+      .bg-var-9 {
+        background: linear-gradient(
+          180deg,
+          #000000 0%,
+          #020617 60%,
+          #0f172a 100%
+        );
+      }
+      .bg-var-10 {
+        background: linear-gradient(
+          180deg,
+          #334155 0%,
+          #475569 60%,
+          #94a3b8 100%
+        );
+      }
+
+      /* HEAVY RAIN Overlay (Disesuaikan ukurannya agar aman) */
+      .slide-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+          linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.7) 0%,
+            rgba(255, 255, 255, 0) 30%
+          ),
+          linear-gradient(
+            to top,
+            rgba(255, 255, 255, 0.35) 0%,
+            rgba(255, 255, 255, 0) 50%
+          ),
+          repeating-linear-gradient(
+            18deg,
+            transparent,
+            transparent 60px,
+            rgba(255, 255, 255, 0.7) 60px,
+            rgba(255, 255, 255, 0.7) 65px
+          ),
+          repeating-linear-gradient(
+            15deg,
+            transparent,
+            transparent 35px,
+            rgba(255, 255, 255, 0.45) 35px,
+            rgba(255, 255, 255, 0.45) 39px
+          ),
+          repeating-linear-gradient(
+            22deg,
+            transparent,
+            transparent 18px,
+            rgba(255, 255, 255, 0.25) 18px,
+            rgba(255, 255, 255, 0.25) 20px
+          );
+        z-index: 0;
+        pointer-events: none;
+        border-radius: 40px;
+      }
+
+      /* Voluminous Static Clouds Overlay */
+      .slide-container::after {
+        content: "";
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 1400px;
+        height: 350px;
+        background:
+          radial-gradient(
+            circle at 10% 40%,
+            rgba(255, 255, 255, 0.3) 0%,
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 50% 20%,
+            rgba(255, 255, 255, 0.25) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 90% 50%,
+            rgba(255, 255, 255, 0.3) 0%,
+            transparent 40%
+          );
+        filter: blur(20px);
+        z-index: 0;
+        pointer-events: none;
+        border-radius: 40px;
+      }
+
+      .slide-container > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ON-SCREEN NAVIGATION CONTROLS */
+      .nav-btn,
+      .fullscreen-btn {
+        position: fixed;
+        z-index: 99999;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+      .nav-btn {
+        top: 50%;
+        transform: translateY(-50%);
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+      .nav-btn:hover {
+        background: rgba(56, 189, 248, 0.8);
+        border-color: #fff;
+        transform: translateY(-50%) scale(1.15);
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.6);
+      }
+      .nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: translateY(-50%) scale(1);
+      }
+
+      .prev-btn {
+        left: 30px;
+      }
+      .next-btn {
+        right: 30px;
+      }
+
+      .fullscreen-btn {
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      }
+      .fullscreen-btn:hover {
+        background: rgba(56, 189, 248, 0.9);
+        border-color: #fff;
+        transform: scale(1.15);
+        box-shadow: 0 15px 35px rgba(56, 189, 248, 0.6);
+      }
+
+      /* SLIDE INDICATOR */
+      .slide-indicator {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 99999;
+        background: rgba(15, 23, 42, 0.6);
+        padding: 8px 20px;
+        border-radius: 20px;
+        color: #fff;
+        font-family: "Nunito", sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+      }
+
+      /* --- 2. 3D TYPOGRAPHY --- */
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Quicksand", sans-serif;
+        margin: 0;
+      }
+
+      .slide-container h1,
+      .slide-container .slide-title {
+        color: #ffffff;
+        font-weight: 800;
+        text-shadow:
+          2px 2px 0px #64748b,
+          4px 4px 0px #475569,
+          6px 6px 0px #334155,
+          8px 8px 0px #1e293b,
+          12px 12px 30px rgba(0, 0, 0, 0.9);
+      }
+
+      .slide-container h1 {
+        font-size: 80px;
+        text-align: center;
+        line-height: 1.1;
+        margin-bottom: 25px;
+      }
+      .slide-container .slide-title {
+        font-size: 55px;
+        margin-bottom: 40px;
+        text-align: left;
+        width: 100%;
+      }
+
+      .slide-container h3 {
+        font-size: 28px;
+        margin-bottom: 10px;
+        color: #0f172a;
+        font-weight: 800;
+      }
+      .slide-container h4 {
+        font-size: 22px;
+        margin-bottom: 5px;
+        color: #1e293b;
+        font-weight: 800;
+      }
+
+      .slide-container p,
+      .slide-container li {
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 19px;
+        line-height: 1.5;
+      }
+
+      .slide-container .content-area {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: center;
+        width: 100%;
+      }
+
+      /* --- 3. UNIFIED CONTAINERS WITH INTERACTIVE HOVER --- */
+      .glass-base {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.95),
+          rgba(226, 232, 240, 0.85)
+        );
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: 30px;
+        position: relative;
+        border: 4px solid #94a3b8;
+        box-shadow:
+          inset 0 8px 15px rgba(255, 255, 255, 1),
+          0 15px 30px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+
+      .glass-base:hover {
+        border-color: #38bdf8;
+        box-shadow:
+          0 0 25px rgba(56, 189, 248, 0.9),
+          inset 0 8px 15px rgba(255, 255, 255, 1),
+          0 20px 40px rgba(0, 0, 0, 0.5);
+        transform: translateY(-5px);
+      }
+
+      .cloud-cumulus {
+        border-radius: 40px 60px 40px 50px;
+      }
+      .cloud-stratus {
+        border-radius: 20px 20px 20px 20px;
+      }
+      .cloud-cirrus {
+        border-radius: 60px 10px 60px 10px;
+      }
+
+      /* Layouts */
+      .title-layout {
+        text-align: center;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .dosen-box {
+        margin-top: 40px;
+        padding: 20px 50px;
+        display: inline-block;
+        cursor: default;
+      }
+      .student-box {
+        position: absolute;
+        bottom: 40px;
+        right: 40px;
+        padding: 20px 40px;
+        text-align: right;
+        cursor: default;
+      }
+      .student-box p {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.4;
+      }
+
+      .two-column {
+        align-items: stretch;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 50px;
+        width: 100%;
+      }
+      .two-column ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .two-column li {
+        margin-bottom: 20px;
+        padding-left: 40px;
+        position: relative;
+      }
+      .two-column li::before {
+        content: "\f0c2";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        top: 2px;
+        color: #64748b;
+        font-size: 22px;
+      }
+
+      .bullet-list {
+        width: 100%;
+        max-width: 1000px;
+      }
+      .bullet-list ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .bullet-list li {
+        padding: 20px 25px 20px 80px;
+        margin-bottom: 25px;
+        position: relative;
+        cursor: default;
+      }
+      .bullet-list i.icon-bullet {
+        background: #cbd5e1;
+        color: #1e293b;
+        height: 50px;
+        width: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.8);
+      }
+
+      .mindmap-layout {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 40px;
+        width: 100%;
+      }
+      .mindmap-center {
+        flex: 0 0 320px;
+        text-align: center;
+        z-index: 2;
+        padding: 40px 20px;
+        cursor: default;
+      }
+      .mindmap-center h3 {
+        color: #0284c7;
+        font-size: 36px;
+      }
+      .mindmap-connector {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 40px;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+      }
+      .mindmap-branches {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex: 0 0 450px;
+        position: relative;
+      }
+      .mindmap-node {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 15px 30px;
+        cursor: default;
+      }
+      .mindmap-node .icon {
+        font-size: 40px;
+        color: #0f172a;
+      }
+
+      .tiled-content {
+        align-items: stretch;
+        display: flex;
+        gap: 30px;
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .tile {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        padding: 30px 20px;
+        cursor: default;
+        min-width: 250px;
+      }
+      .tile .icon {
+        font-size: 50px;
+        margin-bottom: 15px;
+        color: #334155;
+        filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.2));
+      }
+
+      .highlight-numbers-layout {
+        display: flex;
+        align-items: center;
+        gap: 50px;
+        width: 100%;
+      }
+      .highlight-numbers-layout > div:first-child {
+        flex: 0 0 35%;
+        text-align: center;
+      }
+      .number-box {
+        padding: 40px;
+        display: inline-block;
+        text-align: center;
+        cursor: default;
+      }
+      .highlight-numbers-layout .number {
+        color: #ffffff;
+        font-size: 130px;
+        font-family: "Quicksand", sans-serif;
+        font-weight: 800;
+        line-height: 1;
+        text-shadow:
+          4px 4px 0px #94a3b8,
+          8px 8px 0px #64748b,
+          12px 12px 0px #334155;
+      }
+
+      .timeline-layout {
+        align-items: stretch;
+        display: flex;
+        height: stretch;
+        justify-content: space-between;
+        position: relative;
+        width: 100%;
+        padding: 40px 0;
+      }
+      .timeline-layout .timeline-line {
+        background: #cbd5e1;
+        height: 8px;
+        left: 0;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-4px);
+        width: 100%;
+        z-index: 0;
+        border-radius: 4px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+      .timeline-item {
+        position: relative;
+        text-align: center;
+        width: 23%;
+      }
+      .timeline-item::after {
+        background-color: #ffffff;
+        border-radius: 50%;
+        border: 8px solid #334155;
+        content: "";
+        height: 35px;
+        left: 50%;
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 35px;
+        z-index: 1;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      }
+      .timeline-item .content-wrapper {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        padding: 20px;
+        cursor: default;
+      }
+      .timeline-item:nth-child(odd) .content-wrapper {
+        bottom: 50%;
+        margin-bottom: 45px;
+      }
+      .timeline-item:nth-child(even) .content-wrapper {
+        margin-top: 45px;
+        top: 50%;
+      }
+
+      /* --- 4. IMAGE & UPLOAD SLOTS --- */
+      .image-wrapper {
+        border-radius: 30px;
+        height: 100%;
+        min-height: 350px;
+        width: 100%;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        border: 4px solid #fff;
+        background: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .image-wrapper img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+      }
+
+      .upload-slot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        height: 400px;
+        width: 100%;
+      }
+      .upload-slot.flowchart-slot {
+        height: 480px;
+      }
+
+      .upload-slot .placeholder-text {
+        text-align: center;
+        color: #1e293b;
+        padding: 20px;
+      }
+      .upload-slot .placeholder-text i {
+        font-size: 60px;
+        margin-bottom: 15px;
+        color: #475569;
+      }
+
+      /* CSS FIX AUTOFIT GRAFIK */
+      .upload-slot img.preview-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: transparent;
+        display: none;
+        z-index: 2;
+        border-radius: inherit;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- KONTROL PRESENTASI -->
+    <button
+      class="nav-btn prev-btn"
+      id="prevBtn"
+      onclick="prevSlide()"
+      title="Slide Sebelumnya"
+      disabled
+    >
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <button
+      class="nav-btn next-btn"
+      id="nextBtn"
+      onclick="nextSlide()"
+      title="Slide Selanjutnya"
+    >
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+    <button
+      class="fullscreen-btn"
+      onclick="toggleFullScreen()"
+      title="Toggle Fullscreen"
+    >
+      <i class="fa-solid fa-expand" id="fs-icon"></i>
+    </button>
+    <div class="slide-indicator" id="slideIndicator">Slide 1 / 22</div>
+
+    <div class="presentation-window">
+      <div class="deck-container" id="deckContainer">
+        <!-- Slide 1: Title_Slide -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-1">
+            <div class="title-layout">
+              <h1>LAPORAN ANALISA<br />CURAH HUJAN</h1>
+              <div
+                class="glass-base cloud-stratus"
+                style="padding: 10px 40px; display: inline-block"
+              >
+                <p style="margin: 0; font-size: 24px; font-weight: 800">
+                  Menggunakan Aplikasi MATLAB
+                </p>
+              </div>
+
+              <div class="dosen-box glass-base cloud-cumulus">
+                <p style="font-size: 18px; margin-bottom: 5px; color: #475569">
+                  Dosen Pengampu:
+                </p>
+                <h3 style="margin: 0; font-size: 26px">
+                  Mulyadi Abdul Wahid, M.Sc.
+                </h3>
+              </div>
+            </div>
+
+            <div class="student-box glass-base cloud-cirrus">
+              <p style="font-weight: 800; color: #0f172a; margin-bottom: 5px">
+                Riski Apriliana
+                <span style="color: #475569; font-weight: 600"
+                  >(240714003)</span
+                >
+              </p>
+              <p style="font-size: 16px; margin: 0; color: #1e293b">
+                Teknik Fisika<br />UIN Ar-Raniry
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 2: Latar Belakang -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-2">
+            <h2 class="slide-title">Latar Belakang</h2>
+            <div class="content-area">
+              <div class="two-column">
+                <div class="glass-base cloud-stratus">
+                  <ul>
+                    <li>
+                      Curah hujan sangat penting dalam siklus hidrologi,
+                      memengaruhi pertanian, sumber air, dan potensi banjir.
+                    </li>
+                    <li>
+                      Data curah hujan umumnya berjumlah besar dan kompleks,
+                      sehingga butuh pengolahan yang efisien.
+                    </li>
+                    <li>
+                      Pengolahan manual memakan waktu dan rentan kesalahan
+                      (human error).
+                    </li>
+                    <li>
+                      MATLAB digunakan untuk komputasi numerik, analisis
+                      statistik, serta visualisasi data secara cepat.
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <div class="image-wrapper">
+                    <img src="Hujan lebat.jpg" alt="Hujan estetik lebat" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 3: Tujuan -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-3">
+            <h2 class="slide-title">Tujuan Penulisan</h2>
+            <div class="content-area">
+              <div class="bullet-list">
+                <ul>
+                  <li class="glass-base cloud-cumulus">
+                    <i class="fa-solid fa-droplet icon-bullet"></i> Memahami dan
+                    menganalisis data curah hujan dengan pendekatan
+                    terkomputerisasi.
+                  </li>
+                  <li class="glass-base cloud-stratus">
+                    <i class="fa-solid fa-laptop-code icon-bullet"></i>
+                    Mengetahui cara pengolahan data yang efektif menggunakan
+                    sintaks MATLAB.
+                  </li>
+                  <li class="glass-base cloud-cirrus">
+                    <i class="fa-solid fa-calculator icon-bullet"></i>
+                    Menghitung nilai statistik penting, seperti rata-rata, nilai
+                    maksimum, dan minimum.
+                  </li>
+                  <li class="glass-base cloud-stratus">
+                    <i class="fa-solid fa-chart-pie icon-bullet"></i> Menyajikan
+                    hasil analisis dalam bentuk grafik yang informatif dan mudah
+                    dipahami.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 4: Teori Dasar -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-4">
+            <h2 class="slide-title">Pengertian & Jenis Hujan</h2>
+            <div class="content-area">
+              <div class="mindmap-layout">
+                <div class="mindmap-center glass-base cloud-cumulus">
+                  <h3>Curah Hujan</h3>
+                  <p style="margin: 0; font-size: 16px">
+                    Jumlah air yang jatuh dalam wilayah & waktu tertentu (mm).
+                  </p>
+                </div>
+
+                <div class="mindmap-connector">
+                  <i class="fa-solid fa-angles-right"></i>
+                </div>
+
+                <div class="mindmap-branches">
+                  <div class="mindmap-node glass-base cloud-cirrus">
+                    <div class="icon"><i class="fa-solid fa-sun"></i></div>
+                    <div>
+                      <h4>Hujan Konveksi</h4>
+                      <p style="margin: 0; font-size: 15px">
+                        Akibat pemanasan permukaan bumi.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="mindmap-node glass-base cloud-stratus">
+                    <div class="icon"><i class="fa-solid fa-mountain"></i></div>
+                    <div>
+                      <h4>Hujan Orografis</h4>
+                      <p style="margin: 0; font-size: 15px">
+                        Udara naik terhalang pegunungan.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="mindmap-node glass-base cloud-cumulus">
+                    <div class="icon"><i class="fa-solid fa-wind"></i></div>
+                    <div>
+                      <h4>Hujan Frontal</h4>
+                      <p style="margin: 0; font-size: 15px">
+                        Temu udara panas & dingin.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 5: Parameter -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-5">
+            <h2 class="slide-title">Parameter Hidrologi</h2>
+            <div class="content-area">
+              <div class="tiled-content">
+                <div class="glass-base cloud-cumulus tile">
+                  <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
+                  <h3>Parameter</h3>
+                  <p>
+                    Perhitungan rata-rata curah hujan, nilai maksimum, minimum,
+                    & standar deviasi.
+                  </p>
+                </div>
+                <div class="glass-base cloud-stratus tile">
+                  <div class="icon">
+                    <i class="fa-solid fa-calendar-days"></i>
+                  </div>
+                  <h3>Siklus & Waktu</h3>
+                  <p>
+                    Mengidentifikasi siklus harian, bulanan, atau tahunan untuk
+                    melihat anomali curah hujan.
+                  </p>
+                </div>
+                <div class="glass-base cloud-cirrus tile">
+                  <div class="icon">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                  </div>
+                  <h3>Distribusi</h3>
+                  <p>
+                    Dianalisis menggunakan grafik untuk mengidentifikasi tren,
+                    dan fluktuasi cuaca.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 6: Pola & Distribusi -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-6">
+            <h2 class="slide-title">Pola & Distribusi Cuaca</h2>
+            <div class="content-area">
+              <div class="two-column">
+                <div class="glass-base cloud-stratus">
+                  <h3>Pola Musiman Indonesia</h3>
+                  <p>
+                    Pola curah hujan menggambarkan bagaimana distribusi curah
+                    hujan dalam suatu periode waktu.
+                  </p>
+                  <p>
+                    Di Indonesia, pola curah hujan umumnya bersifat musiman
+                    secara tegas, dengan curah hujan tinggi pada musim penghujan
+                    dan rendah pada musim kemarau.
+                  </p>
+                </div>
+                <div class="glass-base cloud-cumulus">
+                  <h3>Analisis Tren Grafik</h3>
+                  <p>
+                    Distribusi curah hujan sangat krusial untuk dianalisis
+                    menggunakan representasi grafik atau diagram.
+                  </p>
+                  <p>
+                    Dengan melihat grafik secara visual, dapat dengan cepat
+                    diketahui kecenderungan (tren) curah hujan, apakah
+                    meningkat, menurun, atau stabil pada periode tersebut.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 7: Manfaat -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-7">
+            <h2 class="slide-title">Manfaat Analisis Curah Hujan</h2>
+            <div class="content-area">
+              <div class="tiled-content">
+                <div
+                  class="glass-base cloud-stratus tile"
+                  style="flex: 0 0 45%"
+                >
+                  <div class="icon" style="font-size: 40px">
+                    <i class="fa-solid fa-wheat-awn"></i>
+                  </div>
+                  <h4>Irigasi Pertanian</h4>
+                  <p style="font-size: 16px">
+                    Membantu perencanaan sistem pengairan yang efektif di sektor
+                    agrikultur.
+                  </p>
+                </div>
+                <div class="glass-base cloud-cirrus tile" style="flex: 0 0 45%">
+                  <div class="icon" style="font-size: 40px">
+                    <i class="fa-solid fa-faucet-drip"></i>
+                  </div>
+                  <h4>Sumber Daya Air</h4>
+                  <p style="font-size: 16px">
+                    Menjadi landasan penting dalam manajemen dan pengelolaan
+                    pasokan air bersih.
+                  </p>
+                </div>
+                <div
+                  class="glass-base cloud-cumulus tile"
+                  style="flex: 0 0 45%"
+                >
+                  <div class="icon" style="font-size: 40px">
+                    <i class="fa-solid fa-house-tsunami"></i>
+                  </div>
+                  <h4>Mitigasi Bencana</h4>
+                  <p style="font-size: 16px">
+                    Digunakan untuk memprediksi potensi bencana hidrometeorologi
+                    seperti banjir & kekeringan.
+                  </p>
+                </div>
+                <div
+                  class="glass-base cloud-stratus tile"
+                  style="flex: 0 0 45%"
+                >
+                  <div class="icon" style="font-size: 40px">
+                    <i class="fa-solid fa-earth-americas"></i>
+                  </div>
+                  <h4>Kajian Perubahan Iklim</h4>
+                  <p style="font-size: 16px">
+                    Membantu pemantauan kondisi cuaca ekstrem di suatu wilayah
+                    secara jangka panjang.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 8: Data Mentah & Algoritma -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-8">
+            <h2 class="slide-title">Data Mentah & Algoritma</h2>
+            <div class="content-area">
+              <div class="highlight-numbers-layout">
+                <div>
+                  <div class="number-box glass-base cloud-cirrus">
+                    <div class="number">120</div>
+                    <p
+                      style="font-weight: 800; color: #0284c7; margin-top: 10px"
+                    >
+                      Titik Data Bulanan
+                    </p>
+                  </div>
+                </div>
+                <div class="glass-base cloud-stratus" style="flex: 1">
+                  <h3>Matriks Data (1997 - 2006)</h3>
+                  <p>
+                    Menganalisa curah hujan rata-rata bulanan Kecamatan Bandar
+                    selama 10 tahun penuh. Data direpresentasikan dalam bentuk
+                    matriks 12 (Bulan) x 10 (Tahun).
+                  </p>
+                  <h4 style="margin-top: 20px">Fungsi MATLAB Utama:</h4>
+                  <ul>
+                    <li>
+                      <strong style="color: #0284c7">for i = 1:length()</strong>
+                      : Iterasi pemrosesan tiap tahun.
+                    </li>
+                    <li>
+                      <strong style="color: #0284c7">plot() & mean()</strong> :
+                      Membangun visual & menghitung rata-rata.
+                    </li>
+                    <li>
+                      <strong style="color: #0284c7">saveas()</strong> :
+                      Mengekspor otomatis hasil analisa ke format PDF.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 9: Timeline Komputasi -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-9">
+            <h2 class="slide-title">Alur Komputasi Data</h2>
+            <div class="content-area">
+              <div class="timeline-layout">
+                <div class="timeline-line"></div>
+                <div class="timeline-item">
+                  <div class="content-wrapper glass-base cloud-cumulus">
+                    <h4>1. Inisialisasi</h4>
+                    <p style="font-size: 16px">
+                      Input matriks data curah hujan bulanan ke workspace.
+                    </p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="content-wrapper glass-base cloud-stratus">
+                    <h4>2. Looping Proses</h4>
+                    <p style="font-size: 16px">
+                      Iterasi `for-loop` memproses komputasi spesifik per tahun.
+                    </p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="content-wrapper glass-base cloud-cirrus">
+                    <h4>3. Plot & Kalkulasi</h4>
+                    <p style="font-size: 16px">
+                      Membangun grafik garis dan fungsi perhitungan `mean()`.
+                    </p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="content-wrapper glass-base cloud-cumulus">
+                    <h4>4. Grafik Gabungan</h4>
+                    <p style="font-size: 16px">
+                      Visualisasi data tren panjang 10 tahun secara
+                      komprehensif.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 10: Diagram Alir (Flowchart) -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-10">
+            <h2 class="slide-title">Diagram Alir (Flowchart)</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div
+                  class="glass-base cloud-cumulus"
+                  style="
+                    padding: 15px;
+                    height: 480px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label
+                    for="upload-flowchart"
+                    class="upload-slot flowchart-slot"
+                    id="slot-flowchart"
+                  >
+                    <div class="placeholder-text" id="text-flowchart">
+                      <i class="fa-solid fa-sitemap"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah Flowchart.png</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-flowchart"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="
+                        previewImage(event, 'img-flowchart', 'text-flowchart')
+                      "
+                    />
+                    <img
+                      id="img-flowchart"
+                      class="preview-img"
+                      src="Flowchart.png"
+                      alt="Flowchart Algoritma"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById(
+                          'text-flowchart',
+                        ).style.display = 'block';
+                      "
+                    />
+                  </label>
+                </div>
+                <div class="glass-base cloud-stratus">
+                  <h3>Visualisasi Logika Komputasi</h3>
+                  <p>
+                    Diagram alir di samping merepresentasikan urutan eksekusi
+                    algoritma pada aplikasi MATLAB. Proses dimulai dari blok
+                    <strong>inisialisasi parameter</strong>, pembacaan
+                    <strong>matriks data 12x10</strong>, dan masuk ke dalam
+                    logika <strong>perulangan (looping)</strong> berkelanjutan.
+                  </p>
+                  <p>
+                    Sistem akan memplot grafik per tahun dan menyimpannya ke
+                    format PDF secara otomatis, lalu diakhiri dengan pembuatan
+                    <strong>grafik gabungan</strong> untuk kebutuhan analisa
+                    iklim jangka panjang.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- SLIDE GRAFIK (NAMA FILE GAMBAR SUDAH DI-INPUT OTOMATIS) -->
+        <!-- ========================================================= -->
+
+        <!-- Slide 11: Analisa Tahun 1997 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-1">
+            <h2 class="slide-title">Analisa Grafik Tahun 1997</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div
+                  class="glass-base cloud-cirrus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-1997" class="upload-slot" id="slot-1997">
+                    <div class="placeholder-text" id="text-1997">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah GRAFIK 1997.png</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-1997"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-1997', 'text-1997')"
+                    />
+                    <img
+                      id="img-1997"
+                      class="preview-img"
+                      src="GRAFIK 1997.png"
+                      alt="Grafik 1997"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-1997').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+                <div class="glass-base cloud-stratus">
+                  <h3>Musim Kemarau Ekstrem</h3>
+                  <p>
+                    Tercatat rata-rata curah hujan sebesar
+                    <strong>249.0833 mm</strong>. Terjadi penurunan drastis di
+                    pertengahan tahun (Juni-September) yang angkanya mendekati
+                    nol, menandakan datangnya musim kemarau yang ekstrem pada
+                    periode tersebut.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 12: Analisa Tahun 1998 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-2">
+            <h2 class="slide-title">Analisa Grafik Tahun 1998</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div class="glass-base cloud-cumulus">
+                  <h3>Penurunan Tajam</h3>
+                  <p>
+                    Rata-rata berada di angka <strong>316.9167 mm</strong>.
+                    Curah hujan awal tahun cukup tinggi, namun grafik
+                    menunjukkan penurunan yang tajam dan menyentuh titik nol
+                    pada bulan Juni, sebelum perlahan naik kembali di akhir
+                    tahun.
+                  </p>
+                </div>
+                <div
+                  class="glass-base cloud-stratus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-1998" class="upload-slot" id="slot-1998">
+                    <div class="placeholder-text" id="text-1998">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah Grafik 1998.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-1998"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-1998', 'text-1998')"
+                    />
+                    <img
+                      id="img-1998"
+                      class="preview-img"
+                      src="Grafik 1998.jpeg"
+                      alt="Grafik 1998"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-1998').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 13: Analisa Tahun 1999 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-3">
+            <h2 class="slide-title">Analisa Grafik Tahun 1999</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div
+                  class="glass-base cloud-cumulus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-1999" class="upload-slot" id="slot-1999">
+                    <div class="placeholder-text" id="text-1999">
+                      <i class="fa-solid fa-file-import"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah Grafik 1999.png</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-1999"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-1999', 'text-1999')"
+                    />
+                    <img
+                      id="img-1999"
+                      class="preview-img"
+                      src="Grafik 1999.png"
+                      alt="Grafik 1999"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-1999').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+                <div class="glass-base cloud-cirrus">
+                  <h3>Puncak Hujan Ekstrem</h3>
+                  <p>
+                    Rata-rata mencapai <strong>354.3333 mm</strong>. Terlihat
+                    puncak hujan ekstrem terjadi pada bulan Februari yang
+                    menembus >1000mm. Penurunan drastis menuju musim kemarau
+                    baru terjadi di bulan Juni.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 14: Analisa Tahun 2000 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-4">
+            <h2 class="slide-title">Analisa Grafik Tahun 2000</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div class="glass-base cloud-stratus">
+                  <h3>Rekor Awal Tahun</h3>
+                  <p>
+                    Rata-rata naik menjadi <strong>442.6667 mm</strong>. Awal
+                    tahun mencatat rekor curah hujan yang sangat tinggi (>1300mm
+                    di bulan Januari), diikuti fluktuasi menengah sebelum masuk
+                    ke fase kering yang stabil di pertengahan tahun.
+                  </p>
+                </div>
+                <div
+                  class="glass-base cloud-cumulus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-2000" class="upload-slot" id="slot-2000">
+                    <div class="placeholder-text" id="text-2000">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah grafik 2000.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-2000"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-2000', 'text-2000')"
+                    />
+                    <img
+                      id="img-2000"
+                      class="preview-img"
+                      src="grafik 2000.jpeg"
+                      alt="Grafik 2000"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-2000').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 15: Analisa Tahun 2001 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-5">
+            <h2 class="slide-title">Analisa Grafik Tahun 2001</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div
+                  class="glass-base cloud-cirrus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-2001" class="upload-slot" id="slot-2001">
+                    <div class="placeholder-text" id="text-2001">
+                      <i class="fa-solid fa-file-import"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah grafik 2001.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-2001"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-2001', 'text-2001')"
+                    />
+                    <img
+                      id="img-2001"
+                      class="preview-img"
+                      src="grafik 2001.jpeg"
+                      alt="Grafik 2001"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-2001').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+                <div class="glass-base cloud-stratus">
+                  <h3>Tertinggi Dalam Dekade</h3>
+                  <p>
+                    Ini adalah tahun dengan rata-rata curah hujan tertinggi
+                    yaitu <strong>547.9167 mm</strong>. Pada grafik, Januari
+                    menyentuh angka krusial mendekati 1500mm, menunjukkan
+                    intensitas badai yang sangat lebat.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 16: Analisa Tahun 2002 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-6">
+            <h2 class="slide-title">Analisa Grafik Tahun 2002</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div class="glass-base cloud-cumulus">
+                  <h3>Pola U-Shape Klasik</h3>
+                  <p>
+                    Rata-rata <strong>472.9167 mm</strong>. Grafik jelas
+                    menunjukkan pola "U-Shape" yang klasik. Curah hujan sangat
+                    lebat di Januari (>1200mm), lalu menyusut tajam di
+                    pertengahan tahun, dan kembali naik memanjat di kuartal
+                    akhir.
+                  </p>
+                </div>
+                <div
+                  class="glass-base cloud-cirrus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-2002" class="upload-slot" id="slot-2002">
+                    <div class="placeholder-text" id="text-2002">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah Grafik 2002.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-2002"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-2002', 'text-2002')"
+                    />
+                    <img
+                      id="img-2002"
+                      class="preview-img"
+                      src="Grafik 2002.jpeg"
+                      alt="Grafik 2002"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-2002').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 17: Analisa Tahun 2003 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-7">
+            <h2 class="slide-title">Analisa Grafik Tahun 2003</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div
+                  class="glass-base cloud-stratus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-2003" class="upload-slot" id="slot-2003">
+                    <div class="placeholder-text" id="text-2003">
+                      <i class="fa-solid fa-file-import"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah Grafik 2003.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-2003"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-2003', 'text-2003')"
+                    />
+                    <img
+                      id="img-2003"
+                      class="preview-img"
+                      src="Grafik 2003.jpeg"
+                      alt="Grafik 2003"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-2003').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+                <div class="glass-base cloud-cumulus">
+                  <h3>Penurunan Stabil</h3>
+                  <p>
+                    Rata-rata <strong>347.25 mm</strong>. Puncak curah hujan
+                    awal tahun (Januari) nyaris mencapai 1000mm, namun disusul
+                    oleh penurunan curam yang stabil hingga mencapai titik
+                    terendah mutlak (0 mm) pada bulan Agustus.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 18: Analisa Tahun 2004 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-8">
+            <h2 class="slide-title">Analisa Grafik Tahun 2004</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div class="glass-base cloud-cirrus">
+                  <h3>Tahun Cenderung Kering</h3>
+                  <p>
+                    Rata-rata turun menjadi <strong>245.0833 mm</strong>.
+                    Termasuk tahun yang lebih kering. Bulan Agustus mencatat
+                    titik nol, dan lonjakan hujan di akhir tahun tidak terlalu
+                    agresif (hanya berkisar di batas 300-400mm).
+                  </p>
+                </div>
+                <div
+                  class="glass-base cloud-stratus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-2004" class="upload-slot" id="slot-2004">
+                    <div class="placeholder-text" id="text-2004">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah Grafik 2004.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-2004"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-2004', 'text-2004')"
+                    />
+                    <img
+                      id="img-2004"
+                      class="preview-img"
+                      src="Grafik 2004.jpeg"
+                      alt="Grafik 2004"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-2004').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 19: Analisa Tahun 2005 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-9">
+            <h2 class="slide-title">Analisa Grafik Tahun 2005</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div
+                  class="glass-base cloud-cumulus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-2005" class="upload-slot" id="slot-2005">
+                    <div class="placeholder-text" id="text-2005">
+                      <i class="fa-solid fa-file-import"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah Grafik 2005.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-2005"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-2005', 'text-2005')"
+                    />
+                    <img
+                      id="img-2005"
+                      class="preview-img"
+                      src="Grafik 2005.jpeg"
+                      alt="Grafik 2005"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-2005').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+                <div class="glass-base cloud-cirrus">
+                  <h3>Durasi Kemarau Panjang</h3>
+                  <p>
+                    Rata-rata <strong>242.75 mm</strong> (Terendah). Mirip
+                    dengan 2004, merupakan tahun dengan curah hujan minim.
+                    Terdapat periode kering garis lurus yang sangat panjang
+                    terbentang dari bulan Juni hingga menembus September.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 20: Analisa Tahun 2006 -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-10">
+            <h2 class="slide-title">Analisa Grafik Tahun 2006</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div class="glass-base cloud-stratus">
+                  <h3>Musim Kontras</h3>
+                  <p>
+                    Rata-rata <strong>395.8333 mm</strong>. Tahun penutup dekade
+                    ini kembali menunjukkan intensitas hujan awal tahun yang
+                    sangat tinggi (Januari mencapai >1400mm), diiringi musim
+                    kemarau yang sangat tegas dari bulan Juli hingga Oktober.
+                  </p>
+                </div>
+                <div
+                  class="glass-base cloud-cumulus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label for="upload-2006" class="upload-slot" id="slot-2006">
+                    <div class="placeholder-text" id="text-2006">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">Unggah grafik 2006.jpeg</p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-2006"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="previewImage(event, 'img-2006', 'text-2006')"
+                    />
+                    <img
+                      id="img-2006"
+                      class="preview-img"
+                      src="grafik 2006.jpeg"
+                      alt="Grafik 2006"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-2006').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 21: Grafik Gabungan -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-1">
+            <h2 class="slide-title">Grafik Curah Hujan 1997 - 2006</h2>
+            <div class="content-area">
+              <div class="two-column" style="align-items: center">
+                <div
+                  class="glass-base cloud-cirrus"
+                  style="
+                    padding: 15px;
+                    height: 400px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
+                >
+                  <label
+                    for="upload-gabungan"
+                    class="upload-slot"
+                    id="slot-gabungan"
+                  >
+                    <div class="placeholder-text" id="text-gabungan">
+                      <i class="fa-solid fa-layer-group"></i>
+                      <h4>Klik Disini</h4>
+                      <p style="font-size: 16px">
+                        Unggah Grafik Gabungan (1997-2006).jpeg
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      id="upload-gabungan"
+                      accept="image/*"
+                      style="display: none"
+                      onchange="
+                        previewImage(event, 'img-gabungan', 'text-gabungan')
+                      "
+                    />
+                    <img
+                      id="img-gabungan"
+                      class="preview-img"
+                      src="Grafik Gabungan (1997-2006).jpeg"
+                      alt="Grafik Gabungan 1997 - 2006"
+                      onerror="
+                        this.style.display = 'none';
+                        document.getElementById('text-gabungan').style.display =
+                          'block';
+                      "
+                    />
+                  </label>
+                </div>
+                <div class="glass-base cloud-stratus">
+                  <h3 style="color: #0ea5e9">Pola Konsisten "U-Shape"</h3>
+                  <p>
+                    Berdasarkan himpunan data 10 tahun penuh, terlihat jelas
+                    kecenderungan profil iklim yang konsisten. Semua garis
+                    memvisualisasikan tingginya curah hujan di awal tahun,
+                    <strong
+                      >menyempit ekstrem mendekati nol di pertengahan
+                      tahun</strong
+                    >
+                    (kemarau serentak), dan kembali memanjat naik menyebar di
+                    akhir tahun.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 22: Penutup -->
+        <div class="slide-wrapper">
+          <div class="slide-container bg-var-2">
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                width: 100%;
+              "
+            >
+              <h2
+                class="slide-title"
+                style="text-align: center; margin-bottom: 5px; font-size: 130px"
+              >
+                Terima Kasih
+              </h2>
+
+              <!-- Teks Arab Satu Baris Sesuai Gambar 272017.png -->
+              <div
+                class="glass-base cloud-stratus"
+                style="
+                  padding: 20px 60px;
+                  margin-top: 15px;
+                  display: inline-block;
+                  white-space: nowrap;
+                "
+              >
+                <p
+                  style="
+                    font-size: 65px;
+                    font-weight: bold;
+                    font-family: &quot;Amiri&quot;, serif;
+                    color: #0f172a;
+                    margin: 0;
+                    direction: rtl;
+                  "
+                >
+                  جَزَاكُمُ اللهُ خَيْرًا كَثِيرًا
+                </p>
+              </div>
+
+              <div style="display: flex; gap: 30px; margin-top: 40px">
+                <div
+                  class="glass-base cloud-cumulus"
+                  style="padding: 15px 40px"
+                >
+                  <p style="font-size: 24px; margin: 0; font-weight: 800">
+                    Sesi Tanya Jawab (Q&A)
+                  </p>
+                </div>
+                <div class="glass-base cloud-cirrus" style="padding: 15px 40px">
+                  <p style="margin: 0; font-size: 18px">
+                    <i
+                      class="fa-solid fa-envelope"
+                      style="color: #475569; margin-right: 10px"
+                    ></i>
+                    Teknik Fisika - UIN Ar-Raniry
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End of deck-container -->
+    </div>
+    <!-- End of presentation-window -->
+
+    <script>
+      // --- SYSTEM AUTO-SCALE (ANTI-BLANK SCREEN / MENCEGAH LAYAR HILANG) ---
+      function resizeSlides() {
+        const containers = document.querySelectorAll(".slide-container");
+        // Gunakan fallback viewport logic yang sangat kuat
+        const viewportWidth =
+          window.innerWidth ||
+          document.documentElement.clientWidth ||
+          document.body.clientWidth ||
+          1280;
+        const viewportHeight =
+          window.innerHeight ||
+          document.documentElement.clientHeight ||
+          document.body.clientHeight ||
+          720;
+
+        // Target resolusi standar slide 1280x720, gunakan sedikit margin agar ada jarak di sekeliling
+        const scaleX = viewportWidth / 1350;
+        const scaleY = viewportHeight / 800;
+        // Batasi scale minimal 0.2 (20%) agar slide TIDAK BISA hilang menjadi 0
+        const scale = Math.max(0.2, Math.min(scaleX, scaleY, 1));
+
+        containers.forEach((container) => {
+          container.style.transform = `scale(${scale})`;
+        });
+      }
+
+      // Jalankan auto-scale segera saat script dibaca
+      resizeSlides();
+      window.addEventListener("resize", resizeSlides);
+
+      // --- SYSTEM HORIZONTAL SLIDER ---
+      let currentSlide = 0;
+      const totalSlides = document.querySelectorAll(".slide-wrapper").length;
+      const deck = document.getElementById("deckContainer");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const indicator = document.getElementById("slideIndicator");
+
+      function updateSlider() {
+        // Karena flex-container, kita geser berdasarkan persen parent
+        const translateValue = currentSlide * -100;
+        deck.style.transform = `translateX(${translateValue}%)`;
+
+        indicator.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === totalSlides - 1;
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides - 1) {
+          currentSlide++;
+          updateSlider();
+        }
+      }
+
+      function prevSlide() {
+        if (currentSlide > 0) {
+          currentSlide--;
+          updateSlider();
+        }
+      }
+
+      // Deteksi Keyboard Arrow Keys
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          nextSlide();
+        } else if (e.key === "ArrowLeft") {
+          prevSlide();
+        }
+      });
+
+      updateSlider();
+
+      // --- SYSTEM IMAGE UPLOAD AUTOFIT ---
+      function previewImage(event, imgId, textId) {
+        var input = event.target;
+        var reader = new FileReader();
+
+        reader.onload = function () {
+          var dataURL = reader.result;
+          var output = document.getElementById(imgId);
+          var text = document.getElementById(textId);
+
+          output.src = dataURL;
+          output.style.display = "block";
+          text.style.display = "none";
+        };
+
+        if (input.files && input.files[0]) {
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      // --- SYSTEM FULLSCREEN ---
+      function toggleFullScreen() {
+        var doc = window.document;
+        var docEl = doc.documentElement;
+        var icon = document.getElementById("fs-icon");
+
+        var requestFullScreen =
+          docEl.requestFullscreen ||
+          docEl.mozRequestFullScreen ||
+          docEl.webkitRequestFullScreen ||
+          docEl.msRequestFullscreen;
+        var cancelFullScreen =
+          doc.exitFullscreen ||
+          doc.mozCancelFullScreen ||
+          doc.webkitExitFullscreen ||
+          doc.msExitFullscreen;
+
+        if (
+          !doc.fullscreenElement &&
+          !doc.mozFullScreenElement &&
+          !doc.webkitFullscreenElement &&
+          !doc.msFullscreenElement
+        ) {
+          requestFullScreen.call(docEl);
+          icon.classList.remove("fa-expand");
+          icon.classList.add("fa-compress");
+        } else {
+          cancelFullScreen.call(doc);
+          icon.classList.remove("fa-compress");
+          icon.classList.add("fa-expand");
+        }
+        // Hitung ulang skala sesaat setelah fullscreen dieksekusi
+        setTimeout(resizeSlides, 200);
+      }
+
+      // --- AUTO-LOAD IMAGES FALLBACK ---
+      // Pastikan kotak tetap memiliki tombol klik apabila foto aslinya belum di-load
+      window.onload = function () {
+        resizeSlides(); // Jalankan lagi setelah semua elemen termuat
+        const previewImages = document.querySelectorAll(".preview-img");
+        previewImages.forEach((img) => {
+          if (img.complete) {
+            if (img.naturalHeight === 0) {
+              img.style.display = "none";
+              img.previousElementSibling.previousElementSibling.style.display =
+                "block";
+            } else {
+              img.style.display = "block";
+              img.previousElementSibling.previousElementSibling.style.display =
+                "none";
+            }
+          }
+        });
+      };
+    </script>
+  </body>
+</html>
+```
